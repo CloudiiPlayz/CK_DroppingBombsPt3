@@ -14,12 +14,20 @@ public class GameManager : MonoBehaviour
     public GameObject playerPrefab;
     private GameObject player;
     private bool gameStarted = false;
+
+    [Header("Score")]
+    public TMP_Text scoreText;
+    public int pointsWorth = 1;
+    private int score;
+
+    private bool smokeCleared = true;
     // Start is called before the first frame update
 
     private void Awake()
     {
         spawner = GameObject.Find("Spawner").GetComponent<Spawner>();
         screenBounds = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, Camera.main.transform.position.z));
+        scoreText.enabled = false;
     }
 
 
@@ -35,8 +43,9 @@ public class GameManager : MonoBehaviour
     {
         if (!gameStarted)
         {
-            if (Input.anyKeyDown)
+            if (Input.anyKeyDown && smokeCleared)
             {
+                smokeCleared = false;
                 ResetGame();
             }
         }
@@ -54,6 +63,9 @@ public class GameManager : MonoBehaviour
             title.SetActive(false);
             splash.SetActive(false);
 
+            scoreText.enabled = true;
+            score = 0;
+
             player = Instantiate(playerPrefab, new Vector3(0, 0, 0), playerPrefab.transform.rotation);
             gameStarted = true;
         }
@@ -64,7 +76,13 @@ public class GameManager : MonoBehaviour
         {
             if (bombObject.transform.position.y < (-screenBounds.y - 12))
             {
-                Destroy(bombObject);
+                if (gameStarted)
+                {
+                    score += pointsWorth;
+                    scoreText.text = "Score: " + score.ToString();
+                }
+                    
+                    Destroy(bombObject);
             }
             
         }
@@ -75,6 +93,12 @@ public class GameManager : MonoBehaviour
         spawner.active = false;
         gameStarted = false;
 
+        Invoke("SplashScreen", 2);
+    }
+
+    void SplashScreen()
+    {
+        smokeCleared = true;
         splash.SetActive(true);
     }
 }
